@@ -4,6 +4,15 @@ import { stdin as input, stdout as output } from "node:process";
 import * as readline from "node:readline/promises";
 import { createWeatherAgent } from "./agent.js";
 
+function isDebug(): boolean {
+  return process.env.DEBUG === "1" || process.env.DEBUG?.toLowerCase() === "true";
+}
+
+function formatErrorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  return String(err);
+}
+
 function getArgPrompt(argv: string[]): string | undefined {
   const args = argv.slice(2);
   if (args.length === 0) return undefined;
@@ -24,12 +33,17 @@ async function runOnce(prompt: string) {
     context: { default_location: defaultLocationFromEnv() },
   };
 
-  const response = await agent.invoke(
-    { messages: [{ role: "user", content: prompt }] },
-    config
-  );
-
-  console.log(JSON.stringify(response.structuredResponse, null, 2));
+  try {
+    const response = await agent.invoke(
+      { messages: [{ role: "user", content: prompt }] },
+      config
+    );
+    console.log(JSON.stringify(response.structuredResponse, null, 2));
+  } catch (err) {
+    console.error(`Error: ${formatErrorMessage(err)}`);
+    if (isDebug()) console.error(err);
+    process.exitCode = 1;
+  }
 }
 
 async function runInteractive() {
@@ -47,31 +61,51 @@ async function runInteractive() {
   console.log();
 
   while (true) {
-    const line = (await rl.question("> ")).trim();
+    let line: string;
+    try {
+      line = (await rl.question("> ")).trim();
+    } catch (err) {
+      // EOF / closed stdin: exit cleanly.
+      if (isDebug()) console.error(err);
+      break;
+    }
     if (!line) continue;
     if (line === "exit" || line === "quit") break;
 
-    const response = await agent.invoke(
-      { messages: [{ role: "user", content: line }] },
-      config
-    );
-    console.log(JSON.stringify(response.structuredResponse, null, 2));
+    try {
+      const response = await agent.invoke(
+        { messages: [{ role: "user", content: line }] },
+        config
+      );
+      console.log(JSON.stringify(response.structuredResponse, null, 2));
+    } catch (err) {
+      console.error(`Error: ${formatErrorMessage(err)}`);
+      if (isDebug()) console.error(err);
+    }
   }
 
   rl.close();
 }
 
-const prompt = getArgPrompt(process.argv);
-if (prompt === "__HELP__") {
-  console.log("Usage:");
-  console.log("  npm run dev -- \"What's the weather in Tokyo?\"");
-  console.log("  npm run build && npm start -- \"What's the weather outside?\"");
-  console.log();
-  console.log("Interactive mode:");
-  console.log("  npm run dev");
-  process.exitCode = 0;
-} else if (prompt) {
-  await runOnce(prompt);
-} else {
-  await runInteractive();
+async function main() {
+  const prompt = getArgPrompt(process.argv);
+  if (prompt === "__HELP__") {
+    console.log("Usage:");
+    console.log("  npm run dev -- \"What's the weather in Tokyo?\"");
+    console.log("  npm run build && npm start -- \"What's the weather outside?\"");
+    console.log();
+    console.log("Interactive mode:");
+    console.log("  npm run dev");
+    return;
+  }
+  if (prompt) return runOnce(prompt);
+  return runInteractive();
+}
+
+try {
+  await main();
+} catch (err) {
+  console.error(`Error: ${formatErrorMessage(err)}`);
+  if (isDebug()) console.error(err);
+  process.exitCode = 1;
 }

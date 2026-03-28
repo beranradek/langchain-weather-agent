@@ -7,7 +7,7 @@ This repo is intentionally simple and educational, following the structure shown
 ## Requirements
 
 - Node.js 20+ (recommended: Node 22+)
-- An LLM API key for the model you choose (e.g. `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`)
+- `OPENAI_API_KEY`
 
 ## Setup
 
@@ -18,8 +18,8 @@ cp .env.example .env
 
 Edit `.env` and set:
 
-- `MODEL` (e.g. `gpt-4o-mini` or `claude-sonnet-4-6`)
-- the matching provider key (`OPENAI_API_KEY` or `ANTHROPIC_API_KEY`)
+- `MODEL` (e.g. `gpt-4o-mini`)
+- `OPENAI_API_KEY`
 - optionally `DEFAULT_LOCATION`
 
 ## Run
@@ -51,6 +51,11 @@ npm start -- \"What's the weather outside?\"
 - Uses `createAgent(...)` + `tool(...)` + `initChatModel(...)`
 - Returns **structured output** (Zod schema) so you can depend on predictable fields
 - Keeps **short-term memory** using `MemorySaver` (per `thread_id`) during an interactive session
+
+## Network / privacy
+
+- Your prompts are sent to OpenAI (via LangChain).
+- Location strings (e.g. city names) are sent to Open-Meteo to resolve coordinates and fetch current weather.
 
 ## References
 

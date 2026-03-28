@@ -3,6 +3,7 @@ export async function fetchJson<T>(
   options?: { timeoutMs?: number }
 ): Promise<T> {
   const timeoutMs = options?.timeoutMs ?? 30_000;
+  const debug = process.env.DEBUG === "1" || process.env.DEBUG?.toLowerCase() === "true";
   const abortController = new AbortController();
   const timeout = setTimeout(() => abortController.abort(), timeoutMs);
 
@@ -12,7 +13,7 @@ export async function fetchJson<T>(
       headers: { "user-agent": "langchain-weather-agent/1.0" },
     });
     if (!res.ok) {
-      const body = await res.text().catch(() => "");
+      const body = debug ? await res.text().catch(() => "") : "";
       throw new Error(
         `HTTP ${res.status} ${res.statusText} for ${url}${body ? `: ${body.slice(0, 200)}` : ""}`
       );
