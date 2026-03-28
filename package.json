@@ -1,0 +1,27 @@
+{
+  "name": "langchain-weather-agent",
+  "version": "1.0.0",
+  "description": "A simple production-style LangChain (TypeScript) console agent that fetches real weather via Open-Meteo.",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@langchain/langgraph": "^1.2.6",
+    "dotenv": "^17.3.1",
+    "langchain": "^1.2.37",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2"
+  }
+}
