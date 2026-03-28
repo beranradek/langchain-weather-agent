@@ -9,19 +9,12 @@ const responseFormat = z.object({
     .describe("Friendly, helpful answer to the user. Use short paragraphs."),
   used_location: z
     .string()
-    .optional()
-    .describe("The location you used for the forecast (if any)."),
-  weather_snapshot: z
-    .object({
-      temperature_c: z.number().optional(),
-      humidity_percent: z.number().optional(),
-      precipitation: z.number().optional(),
-      wind_speed: z.number().optional(),
-      conditions: z.string().optional(),
-      observed_at: z.string().optional(),
-    })
-    .optional()
-    .describe("A best-effort summary of the current conditions (if weather was requested)."),
+    .nullable()
+    .describe("The location you used for the forecast (or null)."),
+  weather_summary: z
+    .string()
+    .nullable()
+    .describe("Best-effort one-line summary of current conditions (or null)."),
 });
 
 type AgentContext = { default_location: string };
@@ -71,12 +64,10 @@ export async function createWeatherAgent() {
 
   const temperature = Number(process.env.TEMPERATURE ?? "0");
   const maxTokens = Number(process.env.MAX_TOKENS ?? "800");
-  const timeoutSeconds = Number(process.env.TIMEOUT_SECONDS ?? "30");
 
   const model = await initChatModel(modelName, {
     temperature: Number.isFinite(temperature) ? temperature : 0,
     maxTokens: Number.isFinite(maxTokens) ? maxTokens : 800,
-    timeout: Number.isFinite(timeoutSeconds) ? timeoutSeconds : 30,
   });
 
   const checkpointer = new MemorySaver();
